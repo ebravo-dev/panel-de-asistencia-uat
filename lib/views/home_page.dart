@@ -16,117 +16,414 @@ class _HomePageState extends State<HomePage> {
   ArchivoController archivoController = ArchivoController();
   final DropdownButtonExample _dropdownButtonExample = DropdownButtonExample();
   late Future<ListResult> futureFiles;
+  late String ciclo = '';
+  final double card_width_size = 320;
 
   @override
   void initState() {
     super.initState();
 
     futureFiles = FirebaseStorage.instance.ref('/images').listAll();
+
+    var month = DateTime.now().month;
+
+    var temporada = month >= 1 && month <= 5
+        ? 'Primavera'
+        : month >= 6 && month <= 7
+            ? 'Verano'
+            : 'Otoño';
+    var numero = temporada == 'Primavera'
+        ? 1
+        : temporada == 'Verano'
+            ? 2
+            : 3;
+
+    ciclo = '${DateTime.now().year} - $numero $temporada';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
-        title: const Text('CREAR NUEVO CICLO'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text(
+          'Panel de Control',
+          style: TextStyle(
+            fontSize: 50,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.background,
+        toolbarHeight: 120,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Ciclo Escolar:'),
-            _dropdownButtonExample,
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: () async {
-                await archivoController.abrirExcel();
-                setState(() {});
-              },
-              label: const Text('Seleccionar Archivo Excel'),
-              icon: const Icon(Icons.search),
-            ),
-            const SizedBox(height: 20),
-            archivoController.archivo != null
-                ? Text(archivoController.archivo!.files.single.name)
-                : const Text('No se ha seleccionado un archivo'),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: archivoController.archivo == null
-                  ? null
-                  : () async {
-                      showDialog(
-                          context: context,
-                          builder: (_) => const AlertDialog(
-                                title: Text('Cargando...'),
-                                content: Text(
-                                  'Espere un momento, este proceso puede tardar varios minutos\nya que es un proceso pesado',
-                                ),
-                              ));
-                      await Future.delayed(const Duration(seconds: 1), () {});
-                      archivoController.leerExcel();
-                      // archivoController.crearMapaHorarios();
-                      if (mounted) Navigator.pop(context);
+      body: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(
+            top: 10,
+          ),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 30,
+            runSpacing: 30,
+            children: [
+              Container(
+                height: 450,
+                width: card_width_size,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 50,
+                  vertical: 30,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Iniciar Ciclo',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Icon(
+                      Icons.directions_run,
+                      color: Colors.deepPurple,
+                      size: 30,
+                    ),
+                    const SizedBox(height: 15),
+                    const Text('Ciclo Actual'),
+                    Text(
+                      ciclo,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Paso 1'),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        await archivoController.abrirExcel();
+                        setState(() {});
+                      },
+                      label: const Text('Seleccionar Excel'),
+                      icon: const Icon(Icons.search),
+                    ),
+                    const SizedBox(height: 20),
+                    archivoController.archivo != null
+                        ? Text(
+                            archivoController.archivo!.files.single.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                            ),
+                          )
+                        : const Text('No se ha seleccionado un archivo',
+                            style: TextStyle(fontSize: 11)),
+                    const SizedBox(height: 15),
+                    const Text('Paso 2'),
+                    ElevatedButton.icon(
+                      onPressed: archivoController.archivo == null
+                          ? null
+                          : () async {
+                              showDialog(
+                                  context: context,
+                                  builder: (_) => const AlertDialog(
+                                        title: Text('Cargando...'),
+                                        content: Text(
+                                          'Espere un momento, este proceso puede tardar varios minutos\n'
+                                          'ya que es un proceso pesado',
+                                        ),
+                                      ));
+                              await Future.delayed(
+                                  const Duration(seconds: 1), () {});
+                              archivoController.leerExcel();
+                              // archivoController.crearMapaHorarios();
+                              if (mounted) Navigator.pop(context);
 
-                      // archivoController.crearMapaHorarios();
-                      setState(() {});
-                    },
-              label: const Text('Construir Ciclo'),
-              icon: const Icon(Icons.build),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: archivoController.profesoresMapa.isEmpty
-                  ? null
-                  : () async {
-                      var ciclo = _dropdownButtonExample.select.select;
-                      var profesores = archivoController.profesoresMapa;
+                              // archivoController.crearMapaHorarios();
+                              setState(() {});
+                            },
+                      label: const Text('Construir Ciclo'),
+                      icon: const Icon(Icons.build),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Paso 3'),
+                    ElevatedButton.icon(
+                      onPressed: archivoController.profesoresMapa.isEmpty
+                          ? null
+                          : () async {
+                              // var ciclo = _dropdownButtonExample.select.select;
+                              var profesores = archivoController.profesoresMapa;
 
-                      var refCiclo = FirebaseFirestore.instance
-                          .collection('ciclos')
-                          .doc(ciclo);
+                              var refCiclo = FirebaseFirestore.instance
+                                  .collection('ciclos')
+                                  .doc(ciclo);
 
-                      showDialog(
-                          context: context,
-                          builder: (_) => const AlertDialog(
-                                title: Text('Almacenando En Base de Datos...'),
-                                content: LinearProgressIndicator(),
-                              ));
+                              showDialog(
+                                  context: context,
+                                  builder: (_) => const AlertDialog(
+                                        title: Text(
+                                            'Almacenando En Base de Datos...'),
+                                        content: LinearProgressIndicator(),
+                                      ));
 
-                      var refProfesores = refCiclo.collection('profesores');
+                              var refProfesores =
+                                  refCiclo.collection('profesores');
 
-                      profesores.forEach((key, value) async {
-                        await refProfesores.doc(key).set(value);
-                      });
+                              profesores.forEach((key, value) async {
+                                await refProfesores.doc(key).set(value);
+                              });
 
-                      if (mounted) Navigator.pop(context);
-                    },
-              label: const Text('Cargar Ciclo'),
-              icon: const Icon(Icons.upload),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                downloadFile(mounted, context);
-              },
-              child: const Text('Respaldar Imagenes'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                var files =
-                    await FirebaseStorage.instance.ref('/images').listAll();
-                for (var ref in files.items) {
-                  await ref.delete();
-                }
-              },
-              child: const Text(
-                'Liberar Espacio',
+                              if (mounted) Navigator.pop(context);
+                            },
+                      label: const Text('Cargar Ciclo'),
+                      icon: const Icon(Icons.upload),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            verFotos(),
-          ],
+              Container(
+                height: 450,
+                width: card_width_size,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 50,
+                  vertical: 30,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Respaldo',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Icon(
+                      Icons.save,
+                      color: Colors.deepPurple,
+                      size: 30,
+                    ),
+                    const SizedBox(height: 15),
+                    const Text('Total de Imagenes'),
+                    FutureBuilder<Object>(
+                      future: fetchImageInfo(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          var data = snapshot.data as Map<String, dynamic>;
+
+                          return Text(
+                            data['count'].toString(),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        } else {
+                          return const SizedBox(
+                            height: 23,
+                            width: 23,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 15),
+                    const Text('Peso total'),
+                    FutureBuilder<Object>(
+                      future: fetchImageInfo(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          var data = snapshot.data as Map<String, dynamic>;
+
+                          return Text(
+                            data['totalBytes'],
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        } else {
+                          return const SizedBox(
+                            height: 23,
+                            width: 23,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Paso 1'),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.download),
+                      onPressed: () {
+                        downloadFile(mounted, context);
+                      },
+                      label: const Text('Descargar Imagenes'),
+                    ),
+                    const SizedBox(height: 15),
+                    const Text('Paso 2'),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.delete_forever),
+                      onPressed: () async {
+                        var confirm = await showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('¿Estas seguro?'),
+                            content: const Text(
+                              'Esta accion no se puede deshacer, asegurate de haber\ndescargado las imagenes antes de continuar',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                ),
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text(
+                                  'Aceptar',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm) {
+                          var files = await FirebaseStorage.instance
+                              .ref('/images')
+                              .listAll();
+                          for (var ref in files.items) {
+                            await ref.delete();
+                          }
+                        }
+                      },
+                      label: const Text(
+                        'Liberar Espacio',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+              Container(
+                height: 450,
+                width: card_width_size,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 50,
+                  vertical: 30,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Profesores',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Icon(
+                      Icons.menu_book,
+                      color: Colors.deepPurple,
+                      size: 30,
+                    ),
+                    // const SizedBox(height: 15),
+                    // const Text('Profesores Registrados'),
+                    // const SizedBox(height: 15),
+                    // const Text('Peso total'),
+                    const SizedBox(height: 15),
+
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.download),
+                      onPressed: () {
+                        downloadFile(mounted, context);
+                      },
+                      label: const Text('Descargar Asistencia'),
+                    ),
+                    const SizedBox(height: 15),
+                    const Text('Paso 2'),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.delete_forever),
+                      onPressed: () async {
+                        var confirm = await showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('¿Estas seguro?'),
+                            content: const Text(
+                              'Esta accion no se puede deshacer, asegurate de haber\ndescargado las imagenes antes de continuar',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                ),
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text(
+                                  'Aceptar',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm) {
+                          var files = await FirebaseStorage.instance
+                              .ref('/images')
+                              .listAll();
+                          for (var ref in files.items) {
+                            await ref.delete();
+                          }
+                        }
+                      },
+                      label: const Text(
+                        'Liberar Espacio',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

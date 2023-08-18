@@ -73,3 +73,32 @@ Widget verFotos() {
     },
   );
 }
+
+Future<Map<String, dynamic>> fetchImageInfo() async {
+  var listResult = await FirebaseStorage.instance.ref('/images').listAll();
+
+  int count = listResult.items.length;
+  double totalBytes = 0;
+
+  for (var item in listResult.items) {
+    var metadata = await item.getMetadata();
+    totalBytes += metadata.size!;
+  }
+
+  return {
+    'count': count,
+    'totalBytes': formatBytes(totalBytes),
+  };
+}
+
+String formatBytes(double bytes) {
+  var units = ["B", "KB", "MB", "GB", "TB"];
+  var unitIndex = 0;
+
+  while (bytes >= 1024 && unitIndex < units.length - 1) {
+    bytes /= 1024;
+    unitIndex++;
+  }
+
+  return "${bytes.toStringAsFixed(2)} ${units[unitIndex]}";
+}
