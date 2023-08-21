@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
-
 import 'package:universal_html/html.dart' as html;
 
 class ArchivoController {
@@ -147,13 +146,13 @@ class ArchivoController {
             }
           }
         }
-        // print(profesoresMapa);
 
         // descargar(profesoresMapa);
       }
     } catch (e) {
       // print('Error al leer el archivo: $e');
     }
+    print(profesoresMapa.length);
   }
 
   descargar(mapa) {

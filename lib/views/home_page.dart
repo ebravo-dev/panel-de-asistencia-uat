@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dashboard_uat_asistencia/controllers/archivo_controller.dart';
 import 'package:dashboard_uat_asistencia/controllers/storage_controller.dart';
-import 'package:dashboard_uat_asistencia/widgets/dropdown_custom.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +13,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   ArchivoController archivoController = ArchivoController();
-  final DropdownButtonExample _dropdownButtonExample = DropdownButtonExample();
   late Future<ListResult> futureFiles;
   late String ciclo = '';
   final double card_width_size = 320;
@@ -49,7 +47,8 @@ class _HomePageState extends State<HomePage> {
         title: const Text(
           'Panel de Control',
           style: TextStyle(
-            fontSize: 50,
+            fontSize: 60,
+            fontWeight: FontWeight.w900,
           ),
         ),
         centerTitle: true,
@@ -359,12 +358,18 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.deepPurple,
                       size: 30,
                     ),
-                    // const SizedBox(height: 15),
-                    // const Text('Profesores Registrados'),
-                    // const SizedBox(height: 15),
-                    // const Text('Peso total'),
                     const SizedBox(height: 15),
-
+                    const Text(
+                      'Ciclo Actual',
+                    ),
+                    Text(
+                      ciclo,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.download),
                       onPressed: () {
