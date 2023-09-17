@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dashboard_uat_asistencia/controllers/archivo_controller.dart';
+import 'package:dashboard_uat_asistencia/controllers/firestore_controller.dart';
 import 'package:dashboard_uat_asistencia/controllers/storage_controller.dart';
+import 'package:dashboard_uat_asistencia/views/ver_en_vivo_faltas_reportes_view.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
@@ -16,6 +18,8 @@ class _HomePageState extends State<HomePage> {
   late Future<ListResult> futureFiles;
   late String ciclo = '';
   final double card_width_size = 320;
+  String activo = '';
+  int cantidad = 0;
 
   @override
   void initState() {
@@ -37,6 +41,38 @@ class _HomePageState extends State<HomePage> {
             : 3;
 
     ciclo = '${DateTime.now().year} - $numero $temporada';
+
+    cantidadProfesores(ciclo).then((value) async {
+      if (value > 0) {
+        activo = 'Activo';
+      } else {
+        activo = 'Inactivo';
+      }
+      cantidad = value;
+
+      if (mounted) {
+        await Future.delayed(const Duration(milliseconds: 1000));
+        setState(() {});
+      }
+    });
+  }
+
+  void showDialogoMantenimiento() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('En Mantenimiento'),
+        content: const Text(
+          'Esta funcion estará disponible en la siguiente actualización',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Aceptar'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -98,11 +134,36 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 15),
                     const Text('Ciclo Actual'),
-                    Text(
-                      ciclo,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '$ciclo ',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          activo == ''
+                              ? const WidgetSpan(
+                                  child: SizedBox(
+                                  height: 18,
+                                  width: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ))
+                              : TextSpan(
+                                  text: activo,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: activo == 'Activo'
+                                        ? Colors.green.shade700
+                                        : Colors.deepOrange.shade800,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -346,7 +407,7 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Text(
-                      'Profesores',
+                      'Acciones',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -354,73 +415,60 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 10),
                     const Icon(
-                      Icons.menu_book,
+                      Icons.settings,
                       color: Colors.deepPurple,
                       size: 30,
                     ),
                     const SizedBox(height: 15),
                     const Text(
-                      'Ciclo Actual',
+                      'Profesores Registrados',
                     ),
-                    Text(
-                      ciclo,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    cantidad == 0
+                        ? const SizedBox(
+                            height: 23,
+                            width: 23,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            '$cantidad',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.download),
-                      onPressed: () {
-                        downloadFile(mounted, context);
-                      },
+                      onPressed: showDialogoMantenimiento,
                       label: const Text('Descargar Asistencia'),
                     ),
                     const SizedBox(height: 15),
-                    const Text('Paso 2'),
                     ElevatedButton.icon(
-                      icon: const Icon(Icons.delete_forever),
-                      onPressed: () async {
-                        var confirm = await showDialog(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text('¿Estas seguro?'),
-                            content: const Text(
-                              'Esta accion no se puede deshacer, asegurate de haber\ndescargado las imagenes antes de continuar',
+                      icon: const Icon(Icons.visibility),
+                      onPressed: showDialogoMantenimiento,
+                      label: const Text(
+                        'Ver Profesor',
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    const Divider(),
+                    const SizedBox(height: 15),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.warning_rounded),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EnVivoFaltasYReportes(
+                              ciclo: ciclo,
                             ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                ),
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text(
-                                  'Aceptar',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
                           ),
                         );
-
-                        if (confirm) {
-                          var files = await FirebaseStorage.instance
-                              .ref('/images')
-                              .listAll();
-                          for (var ref in files.items) {
-                            await ref.delete();
-                          }
-                        }
                       },
                       label: const Text(
-                        'Liberar Espacio',
+                        'Faltantes & Reportes',
                       ),
                     ),
                     const SizedBox(height: 20),
